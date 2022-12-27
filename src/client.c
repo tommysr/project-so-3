@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -25,6 +26,7 @@ struct Message
 };
 
 int create_msg_queue(key_t key);
+key_t create_key(int);
 int queue_id;
 int my_pid;
 void *sending_message();
@@ -94,7 +96,11 @@ void *sending_message()
     memset(message_buff.m_text_with_source.text, 0, MAX);
 
     printf("Enter message: ");
-    scanf("%s", message_buff.m_text_with_source.text);
+    char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
+    if (res == NULL)
+    {
+      printf("read string error");
+    }
 
     printf("Message: \"%s\" \n", message_buff.m_text_with_source.text);
 

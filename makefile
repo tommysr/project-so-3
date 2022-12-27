@@ -3,7 +3,7 @@ default: all
 all: client server
 
 client: ./src/client.c
-	gcc ./src/client.c -o client
+	gcc -pthread ./src/client.c -o client
 
 
 server: ./src/server.c

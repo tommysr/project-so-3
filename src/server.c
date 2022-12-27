@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -25,6 +26,7 @@ struct Message
 };
 
 void sigint_handler();
+void remove_msg_queue(int queue_id);
 int create_msg_queue(key_t key);
 int queue_id;
 
@@ -48,13 +50,13 @@ int main(int argc, char **argv)
       exit(EXIT_FAILURE);
     }
 
-    printf("\tReceived from %d -> %s to \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
+    printf("\tReceived from %d: %s -> %ld to \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
 
     size_t message_size = strlen(message_buff.m_text_with_source.text);
 
     int i;
     for (i = 0; i < message_size; i++)
-      message_buff.m_text_with_source.text[i] = to_upper(message_buff.m_text_with_source.text[i]);
+      message_buff.m_text_with_source.text[i] = toupper(message_buff.m_text_with_source.text[i]);
 
     message_buff.m_destination = (long)message_buff.m_text_with_source.source;
     message_buff.m_text_with_source.source = SERVER;
@@ -101,7 +103,7 @@ int create_msg_queue(key_t key)
   }
   else
   {
-    printf("removed queue %d\n", queue_id);
+    printf("created queue %d\n", queue_id);
   }
 
   return queue_id;
