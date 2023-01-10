@@ -100,7 +100,7 @@ void *sending_message()
 
       printf("Message: \"%s\" \n", message_buff.m_text_with_source.text);
 
-      if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), 0) == -1)
+      if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), IPC_NOWAIT) == -1)
       {
         perror("sending error\n");
         pthread_exit((void *)EXIT_FAILURE);
