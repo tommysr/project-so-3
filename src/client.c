@@ -11,7 +11,7 @@
 #include "common.h"
 
 int queue_id;
-int my_pid;
+long my_pid;
 void *sending_message();
 void *receiving_message();
 
@@ -19,7 +19,7 @@ int main()
 {
   key_t queue_key = create_key(2115);
   queue_id = create_msg_queue(queue_key);
-  my_pid = getpid();
+  my_pid = (long)getpid();
   pthread_t sending_thread;
   pthread_t receiving_thread;
 
@@ -35,13 +35,13 @@ int main()
     exit(EXIT_FAILURE);
   }
 
-  if (pthread_join(sending_thread, NULL))
+  if (pthread_join(sending_thread, NULL) != 0)
   {
     perror("cant join sending thread");
     exit(EXIT_FAILURE);
   }
 
-  if (pthread_join(receiving_thread, NULL))
+  if (pthread_join(receiving_thread, NULL) != 0)
   {
     perror("cant join receiving thread");
     exit(EXIT_FAILURE);
@@ -59,13 +59,13 @@ void *receiving_message()
     if (msgrcv(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), my_pid, 0) == -1)
     {
       perror("cant receive message \n");
-      exit(EXIT_FAILURE);
+      pthread_exit((void *)EXIT_FAILURE);
     }
 
-    printf("\tmessage: %s \n", message_buff.m_text_with_source.text);
+    printf("message returned: %s \n", message_buff.m_text_with_source.text);
   }
 
-  pthread_exit((void *)0);
+  pthread_exit((void *)EXIT_SUCCESS);
 }
 
 void *sending_message()
@@ -76,23 +76,38 @@ void *sending_message()
 
   while (1)
   {
-    memset(message_buff.m_text_with_source.text, 0, MAX);
 
     printf("Enter message: ");
-    char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
-    if (res == NULL)
-    {
-      printf("read string error");
-    }
+    int new_line_pos = 0;
 
-    printf("Message: \"%s\" \n", message_buff.m_text_with_source.text);
-
-    if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), 0) == -1)
+    do
     {
-      perror("sending error\n");
-      exit(EXIT_FAILURE);
-    }
+      memset(message_buff.m_text_with_source.text, 0, MAX);
+
+      char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
+
+      if (res == NULL)
+      {
+        printf("read string error\n");
+        pthread_exit((void *)EXIT_FAILURE);
+      }
+      else
+      {
+        new_line_pos = strcspn(message_buff.m_text_with_source.text, "\n");
+        printf("%d", new_line_pos);
+        message_buff.m_text_with_source.text[new_line_pos] = '\0';
+      }
+
+      printf("Message: \"%s\" \n", message_buff.m_text_with_source.text);
+
+      if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), 0) == -1)
+      {
+        perror("sending error\n");
+        pthread_exit((void *)EXIT_FAILURE);
+      }
+
+    } while (new_line_pos != 0);
   }
 
-  pthread_exit((void *)0);
+  pthread_exit((void *)EXIT_SUCCESS);
 }

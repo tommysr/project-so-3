@@ -22,15 +22,13 @@ int main(int argc, char **argv)
 
   while (1)
   {
-    message_buff.m_destination = SERVER;
-
-    if (msgrcv(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), message_buff.m_destination, 0) == -1)
+    if (msgrcv(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), SERVER, 0) == -1)
     {
       perror("failed to receive message\n");
       exit(EXIT_FAILURE);
     }
 
-    printf("\tReceived from %ld: %s -> %ld to \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
+    printf("\tReceived from %ld: %s -> %ld \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
 
     size_t message_size = strlen(message_buff.m_text_with_source.text);
 

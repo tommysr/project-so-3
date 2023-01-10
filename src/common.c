@@ -36,12 +36,12 @@ void remove_msg_queue(int queue_id)
 
   if (msg_rem == -1)
   {
-    perror("cant delete msg queue");
+    perror("cant delete msg queue\n");
     exit(EXIT_FAILURE);
   }
   else
   {
-    printf("queue deleted");
+    printf("queue deleted\n");
     exit(EXIT_SUCCESS);
   }
 }

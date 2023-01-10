@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define MAX 20
+#define MAX 32 // min is 2, because 1 is reserved for NULL TERMINATOR
 #define SERVER 1
 
 #include "stdio.h"
