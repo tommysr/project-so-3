@@ -1,13 +1,15 @@
 default: all
 
-all: client server
+all: common client server 
+
+common: ./src/common.c
+	gcc -c ./src/common.c -o common
 
 client: ./src/client.c
-	gcc -pthread ./src/client.c -o client
-
+	gcc -pthread ./src/client.c common -o client
 
 server: ./src/server.c
-	gcc ./src/server.c -o server
+	gcc ./src/server.c common -o server
 
 clean:
-	rm -f client server
+	rm -f client server common
