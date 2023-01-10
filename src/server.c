@@ -7,38 +7,18 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-
-#define MAX 20
-#define SERVER 1
-
-key_t create_key(int id);
-
-struct TextWithSource
-{
-  int source;
-  char text[MAX];
-};
-
-struct Message
-{
-  long m_destination;
-  struct TextWithSource m_text_with_source;
-};
+#include "common.h"
 
 void sigint_handler();
-void remove_msg_queue(int queue_id);
-int create_msg_queue(key_t key);
 int queue_id;
 
 int main(int argc, char **argv)
 {
   key_t queue_key = create_key(2115);
-  queue_id = create_msg_queue(queue_key);
-  signal(SIGINT, sigint_handler);
-
   struct Message message_buff;
 
-  int i;
+  queue_id = create_msg_queue(queue_key);
+  signal(SIGINT, sigint_handler);
 
   while (1)
   {
@@ -50,15 +30,14 @@ int main(int argc, char **argv)
       exit(EXIT_FAILURE);
     }
 
-    printf("\tReceived from %d: %s -> %ld to \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
+    printf("\tReceived from %ld: %s -> %ld to \n", message_buff.m_text_with_source.source, message_buff.m_text_with_source.text, message_buff.m_destination);
 
     size_t message_size = strlen(message_buff.m_text_with_source.text);
 
-    int i;
-    for (i = 0; i < message_size; i++)
+    for (int i = 0; i < message_size; i++)
       message_buff.m_text_with_source.text[i] = toupper(message_buff.m_text_with_source.text[i]);
 
-    message_buff.m_destination = (long)message_buff.m_text_with_source.source;
+    message_buff.m_destination = message_buff.m_text_with_source.source;
     message_buff.m_text_with_source.source = SERVER;
 
     if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), 0) == -1)
@@ -74,50 +53,4 @@ int main(int argc, char **argv)
 void sigint_handler()
 {
   remove_msg_queue(queue_id);
-}
-
-void remove_msg_queue(int queue_id)
-{
-  int msg_rem = msgctl(queue_id, IPC_RMID, 0);
-
-  if (msg_rem == -1)
-  {
-    perror("cant delete msg queue");
-    exit(EXIT_FAILURE);
-  }
-  else
-  {
-    printf("queue deleted");
-    exit(EXIT_SUCCESS);
-  }
-}
-
-int create_msg_queue(key_t key)
-{
-  int queue_id = msgget(key, 0600 | IPC_CREAT);
-
-  if (queue_id == -1)
-  {
-    perror("Message queue creation failed\n");
-    exit(EXIT_FAILURE);
-  }
-  else
-  {
-    printf("created queue %d\n", queue_id);
-  }
-
-  return queue_id;
-}
-
-key_t create_key(int id)
-{
-  key_t key = ftok(".", id);
-
-  if (key == -1)
-  {
-    printf("key creation failed\n");
-    exit(EXIT_FAILURE);
-  }
-
-  return key;
 }

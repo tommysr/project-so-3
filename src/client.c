@@ -6,27 +6,10 @@
 #include <sys/msg.h>
 #include <string.h>
 #include <errno.h>
-#include <signal.h>
 #include <sys/sem.h>
 #include <pthread.h>
+#include "common.h"
 
-#define MAX 20
-#define SERVER 1
-
-struct TextWithSource
-{
-  int source;
-  char text[MAX];
-};
-
-struct Message
-{
-  long m_destination;
-  struct TextWithSource m_text_with_source;
-};
-
-int create_msg_queue(key_t key);
-key_t create_key(int);
 int queue_id;
 int my_pid;
 void *sending_message();
@@ -112,34 +95,4 @@ void *sending_message()
   }
 
   pthread_exit((void *)0);
-}
-
-int create_msg_queue(key_t key)
-{
-  int queue_id = msgget(key, 0600 | IPC_CREAT);
-
-  if (queue_id == -1)
-  {
-    perror("Message queue creation failed\n");
-    exit(EXIT_FAILURE);
-  }
-  else
-  {
-    printf("queue id %d\n", queue_id);
-  }
-
-  return queue_id;
-}
-
-key_t create_key(int id)
-{
-  key_t key = ftok(".", id);
-
-  if (key == -1)
-  {
-    printf("key creation failed\n");
-    exit(EXIT_FAILURE);
-  }
-
-  return key;
 }
