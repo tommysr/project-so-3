@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
@@ -9,6 +11,7 @@
 
 #include "common.h"
 
+void clear_abort();
 void sigint_handler(int sig);
 int queue_id;
 
