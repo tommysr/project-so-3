@@ -25,25 +25,25 @@ int main()
 
   if (pthread_create(&sending_thread, NULL, sending_message, NULL) != 0)
   {
-    perror("cant create sending thread\n");
+    perror("[C] cant create sending thread\n");
     exit(EXIT_FAILURE);
   }
 
   if (pthread_create(&receiving_thread, NULL, receiving_message, NULL) != 0)
   {
-    perror("cant create receiving thread\n");
+    perror("[C] cant create receiving thread\n");
     exit(EXIT_FAILURE);
   }
 
   if (pthread_join(sending_thread, NULL) != 0)
   {
-    perror("cant join sending thread");
+    perror("[C] cant join sending thread");
     exit(EXIT_FAILURE);
   }
 
   if (pthread_join(receiving_thread, NULL) != 0)
   {
-    perror("cant join receiving thread");
+    perror("[C] cant join receiving thread");
     exit(EXIT_FAILURE);
   }
 
@@ -58,11 +58,19 @@ void *receiving_message()
   {
     if (msgrcv(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), my_pid, 0) == -1)
     {
-      perror("cant receive message \n");
-      pthread_exit((void *)EXIT_FAILURE);
+      if (errno == EIDRM)
+      {
+        printf("[C] message queue has been deleted\n");
+        exit(EXIT_SUCCESS);
+      }
+      else
+      {
+        perror("[C] cant receive message from queue\n");
+        exit(EXIT_FAILURE);
+      }
     }
 
-    printf("message returned: %s \n", message_buff.m_text_with_source.text);
+    printf("[C] message received: %s \n", message_buff.m_text_with_source.text);
   }
 
   pthread_exit((void *)EXIT_SUCCESS);
@@ -73,40 +81,36 @@ void *sending_message()
   struct Message message_buff;
   message_buff.m_destination = SERVER;
   message_buff.m_text_with_source.source = my_pid;
+  int should_print_prompt = 1;
 
   while (1)
   {
+    // // memset(message_buff.m_text_with_source.text, 0, MAX);
 
-    printf("Enter message: ");
-    int new_line_pos = 0;
+    char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
 
-    do
+    if (res == NULL)
     {
-      memset(message_buff.m_text_with_source.text, 0, MAX);
+      printf("[C] read string from stdin error, incorrect input\n");
+      exit(EXIT_FAILURE);
+    }
 
-      char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
+    message_buff.m_text_with_source.text[strcspn(message_buff.m_text_with_source.text, "\n")] = '\0';
 
-      if (res == NULL)
+    printf("[C] Sending message or message part: %s \n", message_buff.m_text_with_source.text);
+
+    if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), IPC_NOWAIT) == -1)
+    {
+      if (errno == EAGAIN)
       {
-        printf("read string error\n");
-        pthread_exit((void *)EXIT_FAILURE);
+        printf("[C] Message queue is full, not sending message\n");
       }
       else
       {
-        new_line_pos = strcspn(message_buff.m_text_with_source.text, "\n");
-        printf("%d", new_line_pos);
-        message_buff.m_text_with_source.text[new_line_pos] = '\0';
+        perror("[C] error in sending message to the queue\n");
+        exit(EXIT_FAILURE);
       }
-
-      printf("Message: \"%s\" \n", message_buff.m_text_with_source.text);
-
-      if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), IPC_NOWAIT) == -1)
-      {
-        perror("sending error\n");
-        pthread_exit((void *)EXIT_FAILURE);
-      }
-
-    } while (new_line_pos != 0);
+    }
   }
 
   pthread_exit((void *)EXIT_SUCCESS);

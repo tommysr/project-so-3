@@ -19,7 +19,7 @@ int create_msg_queue(key_t key)
 
   if (queue_id == -1)
   {
-    perror("Message queue creation failed\n");
+    perror("message queue creation failed\n");
     exit(EXIT_FAILURE);
   }
   else
@@ -36,7 +36,7 @@ void remove_msg_queue(int queue_id)
 
   if (msg_rem == -1)
   {
-    perror("cant delete msg queue\n");
+    perror("cannot delete msg queue\n");
     exit(EXIT_FAILURE);
   }
   else
