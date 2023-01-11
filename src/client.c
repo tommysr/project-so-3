@@ -81,7 +81,6 @@ void *sending_message()
   struct Message message_buff;
   message_buff.m_destination = SERVER;
   message_buff.m_text_with_source.source = my_pid;
-  int should_print_prompt = 1;
 
   while (1)
   {
