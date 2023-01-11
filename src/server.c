@@ -46,28 +46,11 @@ int main(int argc, char **argv)
 
     printf("[S] Sending: %s [%ld: -> %ld]\n", message_buff.m_text_with_source.text, message_buff.m_text_with_source.source, message_buff.m_destination);
 
-    int sending = 1;
-
-    do
+    if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), 0) == -1)
     {
-      if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), IPC_NOWAIT) == -1)
-      {
-        if (errno == EAGAIN)
-        {
-          printf("[S] Message queue is full, retrying send operation in 3 seconds\n");
-          sleep(3);
-        }
-        else
-        {
-          perror("[S] Error in sending message to the queue\n");
-          clear_abort();
-        }
-      }
-      else
-      {
-        sending = 0;
-      }
-    } while (sending);
+      perror("[S] Error in sending message to the queue\n");
+      clear_abort();
+    }
   }
 
   remove_msg_queue(queue_id);

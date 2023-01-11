@@ -79,13 +79,13 @@ void *receiving_message()
 void *sending_message()
 {
   struct Message message_buff;
+  struct msqid_ds info;
+  int mess_size = sizeof(struct TextWithSource);
   message_buff.m_destination = SERVER;
   message_buff.m_text_with_source.source = my_pid;
 
   while (1)
   {
-    // // memset(message_buff.m_text_with_source.text, 0, MAX);
-
     char *res = fgets(message_buff.m_text_with_source.text, MAX, stdin);
 
     if (res == NULL)
@@ -98,16 +98,31 @@ void *sending_message()
 
     printf("[C] Sending message or message part: %s \n", message_buff.m_text_with_source.text);
 
-    if (msgsnd(queue_id, (struct Message *)&message_buff, sizeof(struct TextWithSource), IPC_NOWAIT) == -1)
+    int get_queue_info = msgctl(queue_id, IPC_STAT, &info);
+
+    if (get_queue_info == -1)
     {
-      if (errno == EAGAIN)
+      perror("[C] error in getting queue info\n");
+      exit(EXIT_FAILURE);
+    }
+
+    if (info.__msg_cbytes + mess_size >= info.msg_qbytes)
+    {
+      printf("[C] Message queue is full, not sending message\n");
+    }
+    else
+    {
+      if (msgsnd(queue_id, (struct Message *)&message_buff, mess_size, IPC_NOWAIT) == -1)
       {
-        printf("[C] Message queue is full, not sending message\n");
-      }
-      else
-      {
-        perror("[C] error in sending message to the queue\n");
-        exit(EXIT_FAILURE);
+        if (errno == EAGAIN)
+        {
+          printf("[C] Message queue is full, not sending message\n");
+        }
+        else
+        {
+          perror("[C] error in sending message to the queue\n");
+          exit(EXIT_FAILURE);
+        }
       }
     }
   }
