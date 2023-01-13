@@ -111,7 +111,7 @@ void *sending_message()
     }
     else
     {
-      if (msgsnd(queue_id, (struct Message *)&message_buff, mess_size, IPC_NOWAIT) == -1)
+      if (msgsnd(queue_id, (struct Message *)&message_buff, mess_size, 0) == -1)
       {
         perror("[C] error in sending message to the queue\n");
         exit(EXIT_FAILURE);
