@@ -98,15 +98,14 @@ void *sending_message()
 
     printf("[C] Sending message or message part: %s \n", message_buff.m_text_with_source.text);
 
-    int get_queue_info = msgctl(queue_id, IPC_STAT, &info);
-
-    if (get_queue_info == -1)
+    int get_queue_info_status = msgctl(queue_id, IPC_STAT, &info);
+    if (get_queue_info_status == -1)
     {
       perror("[C] error in getting queue info\n");
       exit(EXIT_FAILURE);
     }
 
-    if (info.__msg_cbytes + mess_size >= info.msg_qbytes)
+    if (info.msg_qbytes - info.__msg_cbytes < 2 * mess_size)
     {
       printf("[C] Message queue is full, not sending message\n");
     }

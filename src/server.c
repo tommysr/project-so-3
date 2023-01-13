@@ -66,6 +66,7 @@ void sigint_handler(int sig)
 
 void clear_abort()
 {
+  printf("Aborting\n");
   remove_msg_queue(queue_id);
   exit(EXIT_FAILURE);
 }
