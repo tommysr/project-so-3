@@ -113,15 +113,8 @@ void *sending_message()
     {
       if (msgsnd(queue_id, (struct Message *)&message_buff, mess_size, IPC_NOWAIT) == -1)
       {
-        if (errno == EAGAIN)
-        {
-          printf("[C] Message queue is full, not sending message\n");
-        }
-        else
-        {
-          perror("[C] error in sending message to the queue\n");
-          exit(EXIT_FAILURE);
-        }
+        perror("[C] error in sending message to the queue\n");
+        exit(EXIT_FAILURE);
       }
     }
   }
